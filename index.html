@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#C8195F">
+<meta name="description" content="Ventas, fiado, surtido y cuentas de la tiendita.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mi Tiendita">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Mi Tiendita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+/* Layout: one-hand phone app — sticky header, scrolling panel, fixed bottom tabs; big tap targets */
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#E8ECE7; --line:#D5DBD3;
+  --fg:#1C2421; --muted:#5C6862;
+  --accent:#C8195F; --accent-ink:#FFFFFF; --accent-soft:#FBE3EC;
+  --good:#0F7A5C; --good-soft:#DDF2EA; --warn:#B45309; --warn-soft:#FDEFD9; --bad:#B42318; --bad-soft:#FBE4E1;
+  --display:"Baloo 2",ui-rounded,"Arial Rounded MT Bold",system-ui,sans-serif;
+  --body:"Nunito Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --r:14px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121715; --surface:#1B2220; --sunk:#232C29; --line:#33403B;
+  --fg:#ECF1EE; --muted:#9AA8A1;
+  --accent:#F0558F; --accent-ink:#1A0610; --accent-soft:#3A1828;
+  --good:#4ACB9C; --good-soft:#15342A; --warn:#F2A54A; --warn-soft:#3A2A14; --bad:#F2796B; --bad-soft:#3D1D19;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121715; --surface:#1B2220; --sunk:#232C29; --line:#33403B;
+  --fg:#ECF1EE; --muted:#9AA8A1;
+  --accent:#F0558F; --accent-ink:#1A0610; --accent-soft:#3A1828;
+  --good:#4ACB9C; --good-soft:#15342A; --warn:#F2A54A; --warn-soft:#3A2A14; --bad:#F2796B; --bad-soft:#3D1D19;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:12px 16px 8px;display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line)}
+header.top h1{font-family:var(--display);font-weight:800;font-size:26px;margin:0;line-height:1;color:var(--accent)}
+header.top .hoy{font-size:14px;color:var(--muted);text-align:right}
+header.top .hoy b{color:var(--fg);font-size:17px}
+main{padding:14px 16px 170px;max-width:720px;margin:0 auto;display:grid;gap:16px}
+h2{font-family:var(--display);font-weight:700;font-size:22px;margin:0;line-height:1.1;text-wrap:balance}
+h3{font-family:var(--display);font-weight:700;font-size:18px;margin:0}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.between{justify-content:space-between}
+.stack{display:grid;gap:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.btn{border:0;border-radius:12px;padding:12px 16px;min-height:48px;font-weight:700;background:var(--sunk)}
+.btn.pri{background:var(--accent);color:var(--accent-ink)}
+.btn.good{background:var(--good);color:var(--surface)}
+.btn.ghost{background:transparent;border:1.5px solid var(--line)}
+.btn.danger{background:var(--bad-soft);color:var(--bad)}
+.btn.sm{min-height:38px;padding:7px 12px;font-size:14px}
+.btn.wide{width:100%}
+.btn:disabled{opacity:.45;cursor:default}
+input,select{width:100%;min-height:48px;border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface)}
+label.f{display:grid;gap:4px;font-size:14px;font-weight:600;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:7px 14px;font-weight:700;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--sunk);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;border-radius:9px;min-height:42px;font-weight:700}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgb(0 0 0 / .12)}
+/* product tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.tile{position:relative;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px;min-height:96px;display:grid;align-content:space-between;gap:6px}
+.tile .n{font-weight:700;line-height:1.2}
+.tile .p{font-family:var(--display);font-weight:700;font-size:20px}
+.tile .s{font-size:12px;color:var(--muted)}
+.tile .s.low{color:var(--warn);font-weight:700}
+.tile .badge{position:absolute;top:-8px;right:-6px;background:var(--accent);color:var(--accent-ink);border-radius:999px;min-width:28px;height:28px;display:grid;place-items:center;font-weight:800;font-size:15px;padding:0 6px}
+.tile.propio{border-style:dashed}
+/* lists */
+.list{display:grid}
+.item{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item .main{min-width:0;flex:1}
+.item .t{font-weight:700;overflow-wrap:anywhere}
+.item .sub{font-size:13px;color:var(--muted)}
+.amt{font-family:var(--display);font-weight:700;font-size:19px;white-space:nowrap}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:800}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.bad{background:var(--bad-soft);color:var(--bad)}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.big{font-family:var(--display);font-weight:800;font-size:34px;line-height:1}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.stat .v{font-family:var(--display);font-weight:700;font-size:24px;line-height:1.1}
+.hero{background:var(--fg);color:var(--bg);border-radius:var(--r);padding:16px;display:grid;gap:6px}
+.hero .lbl{color:inherit;opacity:.75}
+.bar{height:10px;border-radius:99px;background:var(--sunk);overflow:hidden;display:flex}
+.bar span{display:block;height:100%}
+.empty{text-align:center;padding:26px 12px;color:var(--muted)}
+.empty b{display:block;color:var(--fg);font-family:var(--display);font-size:19px;margin-bottom:4px}
+.banner{background:var(--warn-soft);color:var(--fg);border-radius:var(--r);padding:12px 14px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;font-size:14px}
+/* cart bar */
+.cartbar{position:fixed;left:0;right:0;bottom:calc(68px + env(safe-area-inset-bottom,0px));z-index:6;padding:0 12px 8px;pointer-events:none}
+.cartbar button{pointer-events:auto;width:100%;max-width:696px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;border:0;border-radius:16px;background:var(--accent);color:var(--accent-ink);padding:14px 18px;font-weight:800;font-size:17px;box-shadow:0 6px 20px rgb(0 0 0 / .22)}
+.cartbar .t{font-family:var(--display);font-size:22px}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:7;background:var(--surface);border-top:1px solid var(--line);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+nav.tabs button{border:0;background:transparent;border-radius:12px;padding:6px 2px;display:grid;justify-items:center;gap:2px;font-size:12px;font-weight:700;color:var(--muted);min-height:56px}
+nav.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-current="page"]{color:var(--accent);background:var(--accent-soft)}
+nav.tabs .dot{position:relative}
+nav.tabs .dot[data-n]::after{content:attr(data-n);position:absolute;top:-6px;right:-12px;background:var(--warn);color:var(--surface);font-size:11px;border-radius:99px;padding:0 5px;line-height:17px}
+/* sheet */
+.scrim{position:fixed;inset:0;z-index:20;background:rgb(10 14 12 / .5);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:720px;max-height:92%;overflow:auto;border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));display:grid;gap:14px}
+.sheet .hd{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.x{border:0;background:var(--sunk);border-radius:999px;width:40px;height:40px;font-size:20px;line-height:1}
+.qty{display:flex;align-items:center;gap:6px}
+.qty button{width:40px;height:40px;border-radius:10px;border:0;background:var(--sunk);font-size:20px;font-weight:800}
+.qty span{min-width:28px;text-align:center;font-weight:800}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;font-weight:700;box-shadow:0 6px 20px rgb(0 0 0 / .25);max-width:calc(100% - 32px);text-align:center}
+.status{font-size:13px;padding:8px 12px;border-radius:10px;background:var(--bad-soft);color:var(--bad)}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(24px);opacity:.6}}}
+@media (min-width:560px){.stats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>Mi Tiendita</h1>
+  <div class="hoy"><span id="hoyFecha"></span><br>Hoy vendí <b class="num" id="hoyTotal">$0</b></div>
+</header>
+<main id="app"></main>
+<div class="cartbar" id="cartbar" hidden><button id="cartBtn" type="button"><span id="cartN"></span><span class="t num" id="cartT"></span></button></div>
+<nav class="tabs" id="tabs" aria-label="Secciones">
+  <button type="button" data-tab="vender"><svg viewBox="0 0 24 24"><path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/></svg>Vender</button>
+  <button type="button" data-tab="fiado"><svg viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M9 9h6M9 13h4"/></svg>Fiado</button>
+  <button type="button" data-tab="surtir"><span class="dot" id="surtirDot"><svg viewBox="0 0 24 24"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span>Surtir</button>
+  <button type="button" data-tab="hacer"><svg viewBox="0 0 24 24"><path d="M6 10h12l-1.5 10h-9z"/><path d="M8 10a4 4 0 0 1 8 0"/><path d="M10 6.5c0-1.5 1-2.5 2-2.5s2 1 2 2.5"/></svg>Lo que hago</button>
+  <button type="button" data-tab="cuentas"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Cuentas</button>
+</nav>
+<div id="layer"></div>
+
+<script>
+(function(){
+"use strict";
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const money=n=>(n<0?"-":"")+"$"+Math.abs(Math.round((+n||0)*100)/100).toLocaleString("es-MX",{minimumFractionDigits:Math.abs(n)%1?2:0,maximumFractionDigits:2});
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const pad=n=>String(n).padStart(2,"0");
+const ymd=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const hhmm=d=>pad(d.getHours())+":"+pad(d.getMinutes());
+const today=()=>ymd(new Date());
+const monthKey=d=>d.slice(0,7);
+const MESES=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const fechaLarga=s=>{const [y,m,d]=s.split("-");return +d+" de "+MESES[+m-1]};
+const numIn=v=>{const n=parseFloat(String(v).replace(",","."));return isFinite(n)?n:0};
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const GASTO_CATS=["Mercancía","Insumos","Luz","Gas","Agua","Transporte","Otro"];
+const INVENTARIO_CATS=["Mercancía","Insumos"];
+
+/* ---------- state ---------- */
+const S={
+  tab:ls.get("tab","vender"), lugar:ls.get("lugar","Tienda"), cat:"Todo", q:"",
+  productos:[], ejemplo:false, clientes:[], recetas:[], dias:{},
+  cart:{}, loaded:{p:false,c:false,r:false,d:false}, dbState:"ok", respaldo:null, otroMes:null
+};
+
+/* ---------- storage: IndexedDB on this phone ---------- */
+const SEED_PRODUCTOS=[
+ {id:"p01",nombre:"Coca-Cola 600 ml",cat:"Refrescos",precio:22,costo:16.5,stock:12,min:6,tipo:"reventa"},
+ {id:"p02",nombre:"Coca-Cola 2 L",cat:"Refrescos",precio:42,costo:33,stock:4,min:3,tipo:"reventa"},
+ {id:"p03",nombre:"Agua 1 L",cat:"Refrescos",precio:12,costo:7,stock:3,min:6,tipo:"reventa"},
+ {id:"p04",nombre:"Sabritas 45 g",cat:"Botanas",precio:20,costo:15,stock:8,min:5,tipo:"reventa"},
+ {id:"p05",nombre:"Ruffles 45 g",cat:"Botanas",precio:21,costo:16,stock:2,min:4,tipo:"reventa"},
+ {id:"p06",nombre:"Gansito",cat:"Pan y galletas",precio:18,costo:13.5,stock:5,min:4,tipo:"reventa"},
+ {id:"p07",nombre:"Pan Bimbo grande",cat:"Pan y galletas",precio:52,costo:44,stock:1,min:2,tipo:"reventa"},
+ {id:"p08",nombre:"Leche 1 L",cat:"Abarrotes",precio:29,costo:24,stock:4,min:4,tipo:"reventa"},
+ {id:"p09",nombre:"Huevo (kg)",cat:"Abarrotes",precio:48,costo:40,stock:3,min:2,tipo:"reventa"},
+ {id:"p10",nombre:"Paleta Payaso",cat:"Dulces",precio:15,costo:11,stock:6,min:6,tipo:"reventa"},
+ {id:"p11",nombre:"Chicle",cat:"Dulces",precio:2,costo:1.2,stock:40,min:20,tipo:"reventa"},
+ {id:"p12",nombre:"Boli de fresa",cat:"Lo que hago",precio:8,costo:2.6,stock:30,min:15,tipo:"propio"},
+ {id:"p13",nombre:"Palomitas (bolsa)",cat:"Lo que hago",precio:15,costo:4.2,stock:0,min:20,tipo:"propio"},
+ {id:"p14",nombre:"Chicharrón embolsado",cat:"Lo que hago",precio:15,costo:6.67,stock:10,min:10,tipo:"propio"}];
+const SEED_RECETAS=[
+ {id:"r1",nombre:"Palomitas",pid:"p13",rinde:20,insumos:[{n:"Maíz palomero 1 kg",c:45},{n:"Aceite 250 ml",c:12},{n:"Sal",c:2},{n:"Bolsas (20)",c:25}]},
+ {id:"r2",nombre:"Bolis de fresa",pid:"p12",rinde:30,insumos:[{n:"Polvo sabor fresa",c:20},{n:"Azúcar 1 kg",c:28},{n:"Bolsitas (30)",c:20},{n:"Agua de garrafón",c:10}]},
+ {id:"r3",nombre:"Chicharrones embolsados",pid:"p14",rinde:12,insumos:[{n:"Chicharrón de harina 1 kg",c:55},{n:"Bolsas (12)",c:10},{n:"Salsa y limón",c:15}]}];
+const kv={
+  db:null,
+  open(){return new Promise((res,rej)=>{const r=indexedDB.open("mi-tiendita",1);r.onupgradeneeded=()=>r.result.createObjectStore("kv");r.onsuccess=()=>{kv.db=r.result;res()};r.onerror=()=>rej(r.error)})},
+  all(){return new Promise((res,rej)=>{const out={},tx=kv.db.transaction("kv"),c=tx.objectStore("kv").openCursor();c.onsuccess=()=>{const cur=c.result;if(cur){out[cur.key]=cur.value;cur.continue()}else res(out)};c.onerror=()=>rej(c.error)})},
+  put(k,v){return new Promise((res,rej)=>{const tx=kv.db.transaction("kv","readwrite");tx.objectStore("kv").put(v,k);tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})},
+  clear(){return new Promise((res,rej)=>{const tx=kv.db.transaction("kv","readwrite");tx.objectStore("kv").clear();tx.oncomplete=res;tx.onerror=()=>rej(tx.error)})}
+};
+const queues={};
+function save(path,data){
+  if(!kv.db)return Promise.resolve();
+  const copy=JSON.parse(JSON.stringify(data));
+  queues[path]=(queues[path]||Promise.resolve()).then(()=>kv.put(path,copy)).catch(()=>toast("No se pudo guardar. El celular puede estar sin espacio."));
+  return queues[path];
+}
+const saveProductos=()=>save("tienda/productos",{items:S.productos,ejemplo:S.ejemplo});
+const saveClientes=()=>save("tienda/fiado",{clientes:S.clientes});
+const saveRecetas=()=>save("tienda/recetas",{items:S.recetas});
+function dia(f){if(!S.dias[f])S.dias[f]={fecha:f,ventas:[],gastos:[]};return S.dias[f]}
+const saveDia=f=>save("dias/"+f,S.dias[f]);
+function cargar(all){
+  const p=all["tienda/productos"],c=all["tienda/fiado"],r=all["tienda/recetas"];
+  S.productos=p?p.items||[]:[];S.ejemplo=p?!!p.ejemplo:false;
+  S.clientes=c?(c.clientes||[]).map(x=>({...x,movs:x.movs||[]})):[];
+  S.recetas=r?r.items||[]:[];
+  S.dias={};Object.keys(all).forEach(k=>{if(k.startsWith("dias/")){const v=all[k];S.dias[v.fecha]={fecha:v.fecha,ventas:v.ventas||[],gastos:v.gastos||[]}}});
+  S.respaldo=all["meta/respaldo"]||null;
+  S.loaded={p:true,c:true,r:true,d:true};
+}
+async function boot(){
+  render();
+  try{
+    await kv.open();
+    let all=await kv.all();
+    if(!all["tienda/productos"]){
+      await kv.put("tienda/productos",{items:SEED_PRODUCTOS,ejemplo:true});
+      await kv.put("tienda/recetas",{items:SEED_RECETAS});
+      await kv.put("tienda/fiado",{clientes:[]});
+      all=await kv.all();
+    }
+    cargar(all);
+    try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+  }catch(e){S.dbState="error";S.loaded={p:true,c:true,r:true,d:true}}
+  render();
+}
+/* ---------- respaldo (backup) ---------- */
+async function respaldoArchivo(){
+  const all=await kv.all();delete all["meta/respaldo"];
+  const txt=JSON.stringify({app:"mi-tiendita",version:1,fecha:today(),datos:all});
+  return new File([txt],"respaldo-tiendita-"+today()+".json",{type:"application/json"});
+}
+async function marcarRespaldo(){S.respaldo=today();await kv.put("meta/respaldo",S.respaldo);render();if(document.getElementById("bShare"))abrirRespaldo()}
+async function compartirRespaldo(){
+  const f=await respaldoArchivo();
+  try{
+    if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:"Respaldo Mi Tiendita"});await marcarRespaldo();toast("Respaldo enviado");return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  descargarRespaldo(f);
+}
+async function descargarRespaldo(f){
+  f=f||await respaldoArchivo();
+  const a=document.createElement("a");a.href=URL.createObjectURL(f);a.download=f.name;document.body.appendChild(a);a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},2000);
+  await marcarRespaldo();toast("Respaldo guardado en Descargas");
+}
+function recuperarRespaldo(file){
+  const rd=new FileReader();
+  rd.onload=async()=>{
+    try{
+      const j=JSON.parse(rd.result);
+      if(j.app!=="mi-tiendita"||!j.datos)throw 0;
+      await kv.clear();
+      for(const k of Object.keys(j.datos))await kv.put(k,j.datos[k]);
+      await kv.put("meta/respaldo",j.fecha||today());
+      cargar(await kv.all());close();render();toast("Datos recuperados del "+fechaLarga(j.fecha||today()));
+    }catch(e){toast("Ese archivo no es un respaldo de Mi Tiendita")}
+  };
+  rd.readAsText(file);
+}
+function abrirRespaldo(){
+  sheet("Respaldo de mis datos",
+    '<p class="muted" style="margin:0">Tus datos viven solo en este celular. Si se pierde o se descompone, se pierden. Guarda un respaldo cada semana: mándatelo por WhatsApp o guárdalo en Google Drive.</p>'+
+    (S.respaldo?'<div class="pill good" style="justify-self:start">Último respaldo: '+fechaLarga(S.respaldo)+'</div>':'<div class="pill warn" style="justify-self:start">Todavía no has hecho ningún respaldo</div>')+
+    '<button class="btn pri wide" type="button" id="bShare">Enviar respaldo (WhatsApp, Drive…)</button>'+
+    '<button class="btn ghost wide" type="button" id="bDown">Guardar respaldo en Descargas</button>'+
+    '<h3>Recuperar datos</h3><p class="muted" style="margin:0;font-size:14px">Si cambiaste de celular, abre aquí tu último archivo de respaldo. Esto reemplaza lo que hay ahora en la app.</p>'+
+    '<label class="btn ghost wide" style="display:flex;align-items:center;justify-content:center">Elegir archivo de respaldo<input id="bFile" type="file" accept=".json,application/json" hidden></label>',
+    el=>{
+      el.querySelector("#bShare").onclick=compartirRespaldo;
+      el.querySelector("#bDown").onclick=()=>descargarRespaldo();
+      el.querySelector("#bFile").onchange=e=>{const f=e.target.files[0];if(f)recuperarRespaldo(f)};
+    });
+}
+const necesitaRespaldo=()=>{const hay=Object.keys(S.dias).length>0||S.clientes.length>0;if(!hay)return false;if(!S.respaldo)return true;return (new Date(today())-new Date(S.respaldo))/864e5>=7};
+
+/* ---------- derived ---------- */
+const prod=id=>S.productos.find(p=>p.id===id);
+const saldo=c=>(c.movs||[]).reduce((a,m)=>a+(m.tipo==="abono"?-m.monto:m.monto),0);
+const porSurtir=()=>S.productos.filter(p=>p.tipo!=="propio"&&(+p.stock||0)<=(+p.min||0));
+const porHacer=()=>S.productos.filter(p=>p.tipo==="propio"&&(+p.stock||0)<=(+p.min||0));
+const sugerido=p=>Math.max((+p.min||0)*2-(+p.stock||0),1);
+const cats=()=>["Todo",...new Set(S.productos.map(p=>p.cat||"Otros"))];
+function resumen(dias,mes){
+  const r={ventas:0,efectivo:0,fiado:0,costo:0,lugar:{},gastosOp:0,compras:0,gastos:[],top:{},abonos:0,prestamos:0,dias:new Set()};
+  dias.forEach(d=>{
+    (d.ventas||[]).forEach(v=>{const t=v.c*v.p;r.ventas+=t;r.costo+=v.c*(v.co||0);r[v.pago==="fiado"?"fiado":"efectivo"]+=t;r.lugar[v.l]=(r.lugar[v.l]||0)+t;r.top[v.n]=(r.top[v.n]||0)+v.c;r.dias.add(d.fecha)});
+    (d.gastos||[]).forEach(g=>{r.gastos.push({...g,f:d.fecha});if(INVENTARIO_CATS.includes(g.cat))r.compras+=g.m;else r.gastosOp+=g.m});
+  });
+  S.clientes.forEach(c=>(c.movs||[]).forEach(m=>{if(monthKey(m.f)===mes){if(m.tipo==="abono")r.abonos+=m.monto;if(m.tipo==="prestamo")r.prestamos+=m.monto}}));
+  r.ganancia=r.ventas-r.costo-r.gastosOp;
+  r.entro=r.efectivo+r.abonos; r.salio=r.compras+r.gastosOp+r.prestamos;
+  return r;
+}
+
+/* ---------- UI primitives ---------- */
+let toastT;
+function toast(msg){clearTimeout(toastT);let t=$(".toast");if(!t){t=document.createElement("div");t.className="toast";t.setAttribute("role","status");document.body.appendChild(t)}t.textContent=msg;toastT=setTimeout(()=>t.remove(),2400)}
+function sheet(title,html,onMount){
+  const L=$("#layer");
+  L.innerHTML='<div class="scrim" id="scrim"><div class="sheet" role="dialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="hd"><h2>'+esc(title)+'</h2><button class="x" type="button" data-close aria-label="Cerrar">×</button></div>'+html+'</div></div>';
+  const sc=$("#scrim");
+  sc.addEventListener("click",e=>{if(e.target===sc||e.target.closest("[data-close]"))close()});
+  if(onMount)onMount(sc.querySelector(".sheet"));
+}
+function close(){$("#layer").innerHTML=""}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+/* two-tap confirm for destructive buttons */
+function armed(btn,label){if(btn.dataset.armed){return true}btn.dataset.armed="1";const o=btn.textContent;btn.textContent=label||"Toca otra vez para confirmar";setTimeout(()=>{if(btn.isConnected){delete btn.dataset.armed;btn.textContent=o}},3000);return false}
+
+/* ---------- render ---------- */
+function render(){
+  $("#hoyFecha").textContent=fechaLarga(today());
+  const hd=S.dias[today()];$("#hoyTotal").textContent=money(hd?hd.ventas.reduce((a,v)=>a+v.c*v.p,0):0);
+  document.querySelectorAll("#tabs button").forEach(b=>{if(b.dataset.tab===S.tab)b.setAttribute("aria-current","page");else b.removeAttribute("aria-current")});
+  const n=porSurtir().length+porHacer().length;const dot=$("#surtirDot");if(n)dot.dataset.n=n;else delete dot.dataset.n;
+  const app=$("#app");
+  const keepScroll=window.scrollY, active=document.activeElement&&document.activeElement.id;
+  let html="";
+  if(S.dbState==="error")html+='<div class="status">Este navegador no deja guardar datos. Abre la app en Chrome (Android) o Safari (iPhone), sin modo incógnito.</div>';
+  if(necesitaRespaldo()&&(S.tab==="vender"||S.tab==="cuentas"))html+='<div class="banner"><span>'+(S.respaldo?'Tu último respaldo fue el '+fechaLarga(S.respaldo)+'.':'Aún no guardas un respaldo de tus datos.')+'</span><button class="btn sm" type="button" data-act="respaldo">Hacer respaldo</button></div>';
+  html+=({vender:vVender,fiado:vFiado,surtir:vSurtir,hacer:vHacer,cuentas:vCuentas}[S.tab])();
+  app.innerHTML=html;
+  if(active){const el=document.getElementById(active);if(el&&el.tagName==="INPUT"){el.focus();const v=el.value;el.value="";el.value=v}}
+  window.scrollTo(0,keepScroll);
+  renderCart();
+}
+const loading=()=>'<div class="empty"><b>Cargando tus datos…</b></div>';
+
+/* ---- Vender ---- */
+function vVender(){
+  if(!S.loaded.p)return loading();
+  const cs=cats();
+  let list=S.productos.filter(p=>(S.cat==="Todo"||(p.cat||"Otros")===S.cat)&&(!S.q||p.nombre.toLowerCase().includes(S.q.toLowerCase())));
+  let h='';
+  if(S.ejemplo)h+='<div class="banner"><span>Los productos y precios son de ejemplo. Cámbialos por los tuyos en <b>Surtir → Todos mis productos</b>.</span><button class="btn sm" type="button" data-act="ejemploOk">Ya los ajusté</button></div>';
+  h+='<div class="seg" role="group" aria-label="¿Dónde vendes?">'+["Tienda","Secundaria"].map(l=>'<button type="button" data-act="lugar" data-v="'+l+'" aria-pressed="'+(S.lugar===l)+'">'+(l==="Tienda"?"En la tienda":"En la secundaria")+'</button>').join("")+'</div>';
+  h+='<input id="q" type="search" placeholder="Buscar producto…" value="'+esc(S.q)+'" autocomplete="off">';
+  h+='<div class="chips">'+cs.map(c=>'<button class="chip" type="button" data-act="cat" data-v="'+esc(c)+'" aria-pressed="'+(S.cat===c)+'">'+esc(c)+'</button>').join("")+'</div>';
+  if(!S.productos.length)h+='<div class="card empty"><b>Aún no tienes productos</b>Agrégalos en Surtir → Agregar producto.<br><br><button class="btn pri" type="button" data-act="nuevoProd">Agregar mi primer producto</button></div>';
+  else if(!list.length)h+='<div class="empty">No hay productos con ese nombre.</div>';
+  else h+='<div class="tiles">'+list.map(p=>{const q=S.cart[p.id]||0,low=(+p.stock||0)<=(+p.min||0);return '<button type="button" class="tile'+(p.tipo==="propio"?" propio":"")+'" data-act="add" data-id="'+p.id+'">'+(q?'<span class="badge">'+q+'</span>':'')+'<span class="n">'+esc(p.nombre)+'</span><span class="p num">'+money(p.precio)+'</span><span class="s num'+(low?" low":"")+'">Quedan '+(+p.stock||0)+(low?' · por acabarse':'')+'</span></button>'}).join("")+'</div>';
+  const hd=S.dias[today()];
+  if(hd&&hd.ventas.length){
+    const grupos={};hd.ventas.forEach(v=>{(grupos[v.t||v.id]=grupos[v.t||v.id]||[]).push(v)});
+    h+='<div class="card"><div class="row between"><h3>Ventas de hoy</h3><span class="muted num">'+Object.keys(grupos).length+' ventas</span></div><div class="list">'+Object.entries(grupos).reverse().slice(0,30).map(([t,vs])=>{const tot=vs.reduce((a,v)=>a+v.c*v.p,0);return '<div class="item"><div class="main"><div class="t">'+esc(vs.map(v=>v.c+" "+v.n).join(", "))+'</div><div class="sub">'+esc(vs[0].h)+' · '+esc(vs[0].l)+(vs[0].pago==="fiado"?' · <span class="pill acc">Fiado a '+esc(vs[0].cliN||"")+'</span>':'')+'</div></div><div style="display:grid;justify-items:end;gap:4px"><span class="amt num">'+money(tot)+'</span><button class="btn sm ghost" type="button" data-act="cancelVenta" data-t="'+esc(t)+'">Cancelar</button></div></div>'}).join("")+'</div></div>';
+  }
+  return h;
+}
+function renderCart(){
+  const ids=Object.keys(S.cart).filter(id=>S.cart[id]>0&&prod(id));
+  const bar=$("#cartbar");
+  if(S.tab!=="vender"||!ids.length){bar.hidden=true;return}
+  bar.hidden=false;
+  const n=ids.reduce((a,id)=>a+S.cart[id],0),t=ids.reduce((a,id)=>a+S.cart[id]*prod(id).precio,0);
+  $("#cartN").textContent="Cobrar "+n+(n===1?" producto":" productos");$("#cartT").textContent=money(t);
+}
+function abrirCobro(){
+  const draw=()=>{
+    const ids=Object.keys(S.cart).filter(id=>S.cart[id]>0&&prod(id));
+    if(!ids.length){close();render();return}
+    const t=ids.reduce((a,id)=>a+S.cart[id]*prod(id).precio,0);
+    sheet("Cobrar",
+      '<div class="list card">'+ids.map(id=>{const p=prod(id);return '<div class="item"><div class="main"><div class="t">'+esc(p.nombre)+'</div><div class="sub num">'+money(p.precio)+' c/u</div></div><div class="qty"><button type="button" data-q="-1" data-id="'+id+'" aria-label="Uno menos">−</button><span class="num">'+S.cart[id]+'</span><button type="button" data-q="1" data-id="'+id+'" aria-label="Uno más">+</button></div></div>'}).join("")+'</div>'+
+      '<div class="row between"><span class="lbl">Total · '+esc(S.lugar)+'</span><span class="big num">'+money(t)+'</span></div>'+
+      '<label class="f">¿Con cuánto paga? (opcional)<input id="pagaCon" type="number" inputmode="decimal" placeholder="Ej. 100"></label><div id="cambio" class="muted"></div>'+
+      '<button class="btn good wide" type="button" id="cobEf">Cobrar en efectivo</button>'+
+      '<details><summary class="btn ghost wide" style="list-style:none;display:flex;align-items:center;justify-content:center">Se lo fío a un vecino</summary><div class="stack" style="margin-top:10px">'+
+      (S.clientes.length?'<select id="cliSel"><option value="">Elige a quién…</option>'+S.clientes.map(c=>'<option value="'+c.id+'">'+esc(c.nombre)+' (debe '+money(saldo(c))+')</option>').join("")+'</select>':'')+
+      '<input id="cliNuevo" placeholder="O escribe un nombre nuevo">'+
+      '<button class="btn pri wide" type="button" id="cobFi">Anotar fiado</button></div></details>',
+      el=>{
+        el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{S.cart[b.dataset.id]=Math.max(0,(S.cart[b.dataset.id]||0)+(+b.dataset.q));draw()});
+        const pc=el.querySelector("#pagaCon");pc.oninput=()=>{const v=numIn(pc.value);el.querySelector("#cambio").innerHTML=v?(v>=t?'Cambio: <b class="num">'+money(v-t)+'</b>':'Faltan <b class="num">'+money(t-v)+'</b>'):""};
+        el.querySelector("#cobEf").onclick=()=>cobrar("efectivo");
+        el.querySelector("#cobFi").onclick=()=>{
+          const sel=el.querySelector("#cliSel"),nu=el.querySelector("#cliNuevo").value.trim();
+          let c=sel&&sel.value?S.clientes.find(x=>x.id===sel.value):null;
+          if(!c&&nu){c={id:uid(),nombre:nu,movs:[]};S.clientes.push(c)}
+          if(!c){toast("Elige o escribe el nombre del vecino");return}
+          cobrar("fiado",c);
+        };
+      });
+  };
+  draw();
+}
+function cobrar(pago,cli){
+  const f=today(),d=dia(f),now=new Date(),t=uid();
+  const ids=Object.keys(S.cart).filter(id=>S.cart[id]>0&&prod(id));
+  let total=0;const desc=[];
+  ids.forEach(id=>{const p=prod(id),c=S.cart[id];total+=c*p.precio;desc.push(c+" "+p.nombre);
+    d.ventas.push({id:uid(),t,h:hhmm(now),pid:id,n:p.nombre,c,p:+p.precio,co:+p.costo||0,l:S.lugar,pago,...(cli?{cli:cli.id,cliN:cli.nombre}:{})});
+    p.stock=(+p.stock||0)-c;});
+  if(cli){cli.movs.push({id:t,f,tipo:"fiado",monto:total,nota:desc.join(", ")});saveClientes()}
+  S.cart={};close();saveDia(f);saveProductos();render();
+  toast(pago==="fiado"?"Anotado: "+cli.nombre+" debe "+money(saldo(cli)):"Venta guardada: "+money(total));
+}
+function cancelVenta(t){
+  const f=today(),d=dia(f),vs=d.ventas.filter(v=>(v.t||v.id)===t);
+  vs.forEach(v=>{const p=prod(v.pid);if(p)p.stock=(+p.stock||0)+v.c});
+  d.ventas=d.ventas.filter(v=>(v.t||v.id)!==t);
+  if(vs[0]&&vs[0].pago==="fiado"){const c=S.clientes.find(x=>x.id===vs[0].cli);if(c){c.movs=c.movs.filter(m=>m.id!==t);saveClientes()}}
+  saveDia(f);saveProductos();render();toast("Venta cancelada");
+}
+
+/* ---- Fiado ---- */
+function vFiado(){
+  if(!S.loaded.c)return loading();
+  const total=S.clientes.reduce((a,c)=>a+Math.max(saldo(c),0),0);
+  const lista=[...S.clientes].sort((a,b)=>saldo(b)-saldo(a));
+  let h='<div class="hero"><span class="lbl">Me deben en total</span><span class="big num">'+money(total)+'</span><span style="opacity:.8">'+lista.filter(c=>saldo(c)>0).length+' vecinos con cuenta abierta</span></div>';
+  h+='<div class="row"><input id="nuevoCli" placeholder="Nombre del vecino" style="flex:1;min-width:0"><button class="btn pri" type="button" data-act="addCli">Agregar</button></div>';
+  if(!lista.length)h+='<div class="card empty"><b>Nadie te debe todavía</b>Cuando le fíes a alguien desde Vender, o le prestes dinero, aparece aquí.</div>';
+  else h+='<div class="card list">'+lista.map(c=>{const s=saldo(c),last=c.movs[c.movs.length-1],dias=last?Math.floor((new Date(today())-new Date(last.f))/864e5):0;
+    return '<button type="button" class="item" style="border-left:0;border-right:0;border-top:0;background:none;text-align:left;width:100%" data-act="verCli" data-id="'+c.id+'"><div class="main"><div class="t">'+esc(c.nombre)+'</div><div class="sub">'+(last?'Último movimiento hace '+(dias===0?'hoy':dias+(dias===1?' día':' días')):'Sin movimientos')+(s>0&&dias>=15?' <span class="pill warn">Cobrar</span>':'')+'</div></div><span class="amt num" style="color:'+(s>0?'var(--accent)':'var(--good)')+'">'+(s>0?money(s):'Al corriente')+'</span></button>'}).join("")+'</div>';
+  return h;
+}
+function verCli(id){
+  const c=S.clientes.find(x=>x.id===id);if(!c)return;
+  const s=saldo(c);
+  sheet(c.nombre,
+    '<div class="row between"><span class="lbl">Debe</span><span class="big num">'+money(s)+'</span></div>'+
+    '<label class="f">Cantidad<input id="mMonto" type="number" inputmode="decimal" placeholder="$"></label>'+
+    '<input id="mNota" placeholder="Nota (opcional): ej. le presté para el gas">'+
+    '<div class="grid2"><button class="btn good" type="button" data-m="abono">Me abonó</button><button class="btn pri" type="button" data-m="prestamo">Le presté dinero</button></div>'+
+    '<button class="btn ghost" type="button" data-m="fiado">Le fié mercancía (sin pasar por Vender)</button>'+
+    (s>0?'<button class="btn ghost" type="button" data-m="liquida">Me pagó todo ('+money(s)+')</button>':'')+
+    '<h3>Historial</h3><div class="card list">'+(c.movs.length?[...c.movs].reverse().map(m=>'<div class="item"><div class="main"><div class="t">'+({abono:"Abonó",prestamo:"Préstamo de dinero",fiado:"Fiado"}[m.tipo])+'</div><div class="sub">'+fechaLarga(m.f)+(m.nota?' · '+esc(m.nota):'')+'</div></div><span class="amt num" style="color:'+(m.tipo==="abono"?'var(--good)':'var(--fg)')+'">'+(m.tipo==="abono"?"−":"+")+money(m.monto)+'</span></div>').join(""):'<div class="empty">Sin movimientos</div>')+'</div>'+
+    '<button class="btn danger" type="button" id="delCli">Borrar a '+esc(c.nombre)+'</button>',
+    el=>{
+      el.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{
+        let tipo=b.dataset.m,monto=numIn(el.querySelector("#mMonto").value);
+        if(tipo==="liquida"){tipo="abono";monto=s}
+        if(monto<=0){toast("Escribe la cantidad");return}
+        c.movs.push({id:uid(),f:today(),tipo,monto,nota:el.querySelector("#mNota").value.trim()});
+        saveClientes();render();verCli(id);toast(tipo==="abono"?"Abono anotado":"Anotado");
+      });
+      el.querySelector("#delCli").onclick=e=>{if(!armed(e.target,s>0?"Todavía debe "+money(s)+". Toca otra vez para borrar":null))return;S.clientes=S.clientes.filter(x=>x.id!==id);saveClientes();close();render()};
+    });
+}
+
+/* ---- Surtir / inventario ---- */
+function vSurtir(){
+  if(!S.loaded.p)return loading();
+  const ps=porSurtir(),total=ps.reduce((a,p)=>a+sugerido(p)*(+p.costo||0),0);
+  let h='<div class="hero"><span class="lbl">Para surtir necesitas aprox.</span><span class="big num">'+money(total)+'</span><span style="opacity:.8">'+ps.length+(ps.length===1?' producto se está acabando':' productos se están acabando')+'</span></div>';
+  if(ps.length)h+='<div class="card"><h3>Lista de compras</h3><div class="list">'+ps.map(p=>'<div class="item"><div class="main"><div class="t">'+esc(p.nombre)+'</div><div class="sub num">Quedan '+(+p.stock||0)+' · compra '+sugerido(p)+' · aprox. '+money(sugerido(p)*(+p.costo||0))+'</div></div><span class="pill '+((+p.stock||0)<=0?'bad">Se acabó':'warn">Poco')+'</span><button class="btn sm good" type="button" data-act="compre" data-id="'+p.id+'">Ya compré</button></div>').join("")+'</div></div>';
+  else if(S.productos.length)h+='<div class="card empty"><b>Todo surtido</b>Ningún producto está por debajo de su mínimo.</div>';
+  const ph=porHacer();
+  if(ph.length)h+='<div class="card"><h3>Te toca preparar</h3><div class="list">'+ph.map(p=>'<div class="item"><div class="main"><div class="t">'+esc(p.nombre)+'</div><div class="sub num">Quedan '+(+p.stock||0)+'</div></div><button class="btn sm" type="button" data-act="tab" data-v="hacer">Ir a preparar</button></div>').join("")+'</div></div>';
+  h+='<div class="row between"><h2>Todos mis productos</h2><button class="btn pri sm" type="button" data-act="nuevoProd">+ Agregar producto</button></div>';
+  h+='<div class="card list">'+(S.productos.length?[...S.productos].sort((a,b)=>(a.cat||"").localeCompare(b.cat||"")||a.nombre.localeCompare(b.nombre)).map(p=>{const g=(+p.precio||0)-(+p.costo||0);return '<button type="button" class="item" style="border-left:0;border-right:0;border-top:0;background:none;text-align:left;width:100%" data-act="editProd" data-id="'+p.id+'"><div class="main"><div class="t">'+esc(p.nombre)+(p.tipo==="propio"?' <span class="pill acc">Lo hago yo</span>':'')+'</div><div class="sub num">'+esc(p.cat||"Otros")+' · vendo a '+money(p.precio)+' · me cuesta '+money(p.costo)+' · gano '+money(g)+'</div></div><span class="amt num">'+(+p.stock||0)+'</span></button>'}).join(""):'<div class="empty"><b>Sin productos</b>Agrega lo que vendes para llevar la cuenta.</div>')+'</div>';
+  return h;
+}
+function compre(id){
+  const p=prod(id);if(!p)return;
+  sheet("Compré "+p.nombre,
+    '<div class="grid2"><label class="f">¿Cuántas piezas?<input id="cCant" type="number" inputmode="numeric" value="'+sugerido(p)+'"></label><label class="f">Precio de compra c/u<input id="cCosto" type="number" inputmode="decimal" value="'+(+p.costo||0)+'"></label></div><div id="cTot" class="muted"></div>'+
+    '<button class="btn good wide" type="button" id="cOk">Guardar compra</button>',
+    el=>{
+      const upd=()=>{el.querySelector("#cTot").innerHTML='Gastaste <b class="num">'+money(numIn(el.querySelector("#cCant").value)*numIn(el.querySelector("#cCosto").value))+'</b>. Se anota como gasto de mercancía.'};
+      el.oninput=upd;upd();
+      el.querySelector("#cOk").onclick=()=>{
+        const c=Math.round(numIn(el.querySelector("#cCant").value)),co=numIn(el.querySelector("#cCosto").value);
+        if(c<=0){toast("Escribe cuántas compraste");return}
+        p.stock=(+p.stock||0)+c;if(co>0)p.costo=co;
+        const f=today();dia(f).gastos.push({id:uid(),h:hhmm(new Date()),con:c+" "+p.nombre,cat:"Mercancía",m:c*co});
+        saveProductos();saveDia(f);close();render();toast("Ahora tienes "+p.stock+" "+p.nombre);
+      };
+    });
+}
+function editProd(id){
+  const p=id?prod(id):{id:uid(),nombre:"",cat:"",precio:"",costo:"",stock:0,min:5,tipo:"reventa"};
+  if(!p)return;
+  const catList=[...new Set(S.productos.map(x=>x.cat).filter(Boolean))];
+  sheet(id?"Editar producto":"Nuevo producto",
+    '<label class="f">Nombre<input id="pN" value="'+esc(p.nombre)+'" placeholder="Ej. Coca-Cola 600 ml"></label>'+
+    '<label class="f">Categoría<input id="pC" list="catsDL" value="'+esc(p.cat)+'" placeholder="Ej. Refrescos"><datalist id="catsDL">'+catList.map(c=>'<option value="'+esc(c)+'">').join("")+'</datalist></label>'+
+    '<div class="seg" role="group" aria-label="Tipo">'+[["reventa","Lo compro y revendo"],["propio","Lo hago yo"]].map(([v,l])=>'<button type="button" data-tipo="'+v+'" aria-pressed="'+(p.tipo===v)+'">'+l+'</button>').join("")+'</div>'+
+    '<div class="grid2"><label class="f">Lo vendo a<input id="pP" type="number" inputmode="decimal" value="'+esc(p.precio)+'"></label><label class="f">Me cuesta<input id="pCo" type="number" inputmode="decimal" value="'+esc(p.costo)+'"></label></div>'+
+    '<div class="grid2"><label class="f">Tengo ahorita<input id="pS" type="number" inputmode="numeric" value="'+esc(p.stock)+'"></label><label class="f">Avísame cuando queden<input id="pM" type="number" inputmode="numeric" value="'+esc(p.min)+'"></label></div>'+
+    '<div id="pG" class="muted"></div>'+
+    '<button class="btn pri wide" type="button" id="pOk">Guardar</button>'+(id?'<button class="btn danger" type="button" id="pDel">Borrar producto</button>':''),
+    el=>{
+      let tipo=p.tipo;
+      el.querySelectorAll("[data-tipo]").forEach(b=>b.onclick=()=>{tipo=b.dataset.tipo;el.querySelectorAll("[data-tipo]").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+      const g=()=>{const pr=numIn(el.querySelector("#pP").value),co=numIn(el.querySelector("#pCo").value);el.querySelector("#pG").innerHTML=pr?'Ganas <b class="num">'+money(pr-co)+'</b> por pieza ('+(pr?Math.round((pr-co)/pr*100):0)+'%)':''};
+      el.oninput=g;g();
+      el.querySelector("#pOk").onclick=()=>{
+        const n=el.querySelector("#pN").value.trim();if(!n){toast("Escribe el nombre");return}
+        Object.assign(p,{nombre:n,cat:el.querySelector("#pC").value.trim()||"Otros",tipo,precio:numIn(el.querySelector("#pP").value),costo:numIn(el.querySelector("#pCo").value),stock:Math.round(numIn(el.querySelector("#pS").value)),min:Math.round(numIn(el.querySelector("#pM").value))});
+        if(!id)S.productos.push(p);
+        saveProductos();close();render();toast("Guardado");
+      };
+      const d=el.querySelector("#pDel");if(d)d.onclick=e=>{if(!armed(e.target))return;S.productos=S.productos.filter(x=>x.id!==id);delete S.cart[id];saveProductos();close();render()};
+    });
+}
+
+/* ---- Lo que hago (recetas / producción) ---- */
+function costoTanda(r){return (r.insumos||[]).reduce((a,i)=>a+(+i.c||0),0)}
+function vHacer(){
+  if(!S.loaded.r||!S.loaded.p)return loading();
+  let h='<p class="muted" style="margin:0">Anota lo que gastas en cada tanda y cuántas piezas te salen. La app calcula cuánto te cuesta cada bolsa o boli y cuánto le ganas.</p>';
+  if(!S.recetas.length)h+='<div class="card empty"><b>Aún no tienes recetas</b>Por ejemplo: palomitas, bolis o chicharrones embolsados.</div>';
+  h+=S.recetas.map(r=>{const p=prod(r.pid),ct=costoTanda(r),cp=r.rinde?ct/r.rinde:0,pr=p?+p.precio:0,g=pr-cp,m=pr?g/pr:0;
+    return '<div class="card stack"><div class="row between"><h3>'+esc(r.nombre)+'</h3><button class="btn sm ghost" type="button" data-act="editRec" data-id="'+r.id+'">Editar</button></div>'+
+    '<div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))"><div><div class="lbl">Cada pieza me cuesta</div><div class="amt num">'+money(cp)+'</div></div><div><div class="lbl">La vendo a</div><div class="amt num">'+money(pr)+'</div></div><div><div class="lbl">Gano por pieza</div><div class="amt num" style="color:'+(g>0?'var(--good)':'var(--bad)')+'">'+money(g)+'</div></div></div>'+
+    '<div class="bar" aria-label="Costo contra ganancia"><span style="width:'+Math.min(100,Math.max(0,(1-m)*100))+'%;background:var(--muted)"></span><span style="flex:1;background:var(--good)"></span></div>'+
+    '<div class="sub muted num" style="font-size:13px">Una tanda cuesta '+money(ct)+' y salen '+(r.rinde||0)+' piezas · ganas '+money(g*(r.rinde||0))+' por tanda'+(p?' · tienes '+(+p.stock||0)+' listas':'')+'</div>'+
+    '<button class="btn pri" type="button" data-act="tanda" data-id="'+r.id+'">Hice una tanda (+'+(r.rinde||0)+')</button></div>'}).join("");
+  h+='<button class="btn ghost wide" type="button" data-act="editRec">+ Nueva receta</button>';
+  return h;
+}
+function editRec(id){
+  const r=id?S.recetas.find(x=>x.id===id):{id:uid(),nombre:"",pid:"",insumos:[{n:"",c:""}],rinde:""};
+  if(!r)return;
+  let ins=r.insumos.map(i=>({...i}));
+  const draw=()=>{
+    const propios=S.productos.filter(p=>p.tipo==="propio");
+    sheet(id?"Editar receta":"Nueva receta",
+      '<label class="f">¿Qué preparas?<input id="rN" value="'+esc(r.nombre)+'" placeholder="Ej. Palomitas"></label>'+
+      '<label class="f">Producto que vendes<select id="rP"><option value="">Crear uno nuevo con este nombre</option>'+propios.map(p=>'<option value="'+p.id+'"'+(p.id===r.pid?' selected':'')+'>'+esc(p.nombre)+'</option>').join("")+'</select></label>'+
+      '<div class="lbl">Lo que gastas por tanda</div><div class="stack" id="insL">'+ins.map((i,k)=>'<div class="row" style="flex-wrap:nowrap"><input data-in="'+k+'" data-f="n" value="'+esc(i.n)+'" placeholder="Ej. Maíz 1 kg" style="flex:2;min-width:0"><input data-in="'+k+'" data-f="c" type="number" inputmode="decimal" value="'+esc(i.c)+'" placeholder="$" style="flex:1;min-width:0"><button class="x" type="button" data-rm="'+k+'" aria-label="Quitar">×</button></div>').join("")+'</div>'+
+      '<button class="btn ghost sm" type="button" id="addIn">+ Agregar otro gasto</button>'+
+      '<label class="f">¿Cuántas piezas te salen por tanda?<input id="rR" type="number" inputmode="numeric" value="'+esc(r.rinde)+'"></label>'+
+      '<div id="rRes" class="card"></div>'+
+      '<button class="btn pri wide" type="button" id="rOk">Guardar receta</button>'+(id?'<button class="btn danger" type="button" id="rDel">Borrar receta</button>':''),
+      el=>{
+        const res=()=>{const ct=ins.reduce((a,i)=>a+numIn(i.c),0),rr=numIn(el.querySelector("#rR").value);el.querySelector("#rRes").innerHTML='Una tanda cuesta <b class="num">'+money(ct)+'</b>'+(rr?' · cada pieza te sale en <b class="num">'+money(ct/rr)+'</b>':'')};
+        el.addEventListener("input",e=>{const t=e.target;if(t.dataset.in!=null)ins[+t.dataset.in][t.dataset.f]=t.value;r.nombre=el.querySelector("#rN").value;r.rinde=el.querySelector("#rR").value;res()});
+        el.querySelector("#rP").onchange=e=>{r.pid=e.target.value};
+        res();
+        el.querySelector("#addIn").onclick=()=>{ins.push({n:"",c:""});draw()};
+        el.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ins.splice(+b.dataset.rm,1);if(!ins.length)ins.push({n:"",c:""});draw()});
+        el.querySelector("#rOk").onclick=()=>{
+          const nombre=el.querySelector("#rN").value.trim(),rinde=Math.round(numIn(el.querySelector("#rR").value));
+          if(!nombre||rinde<=0){toast("Escribe qué preparas y cuántas piezas salen");return}
+          r.nombre=nombre;r.rinde=rinde;r.insumos=ins.filter(i=>i.n||numIn(i.c)).map(i=>({n:i.n.trim(),c:numIn(i.c)}));
+          const cp=costoTanda(r)/rinde;
+          let p=prod(el.querySelector("#rP").value);
+          if(!p){p={id:uid(),nombre,cat:"Lo que hago",precio:Math.ceil(cp*2),costo:cp,stock:0,min:10,tipo:"propio"};S.productos.push(p)}
+          else p.costo=Math.round(cp*100)/100;
+          r.pid=p.id;
+          if(!id)S.recetas.push(r);
+          saveRecetas();saveProductos();close();render();toast("Receta guardada");
+        };
+        const d=el.querySelector("#rDel");if(d)d.onclick=e=>{if(!armed(e.target))return;S.recetas=S.recetas.filter(x=>x.id!==id);saveRecetas();close();render()};
+      });
+  };
+  draw();
+}
+function tanda(id){
+  const r=S.recetas.find(x=>x.id===id),p=r&&prod(r.pid);
+  if(!r||!p){toast("Esta receta no tiene producto. Edítala.");return}
+  const ct=costoTanda(r);
+  sheet("Hice "+r.nombre,
+    '<label class="f">¿Cuántas tandas?<input id="tN" type="number" inputmode="numeric" value="1"></label>'+
+    '<label class="row" style="flex-wrap:nowrap;font-weight:600"><input id="tG" type="checkbox" checked style="width:24px;min-height:24px"> Anotar el gasto de insumos (<span id="tGv" class="num">'+money(ct)+'</span>)</label>'+
+    '<p class="muted" style="margin:0;font-size:14px">Quítale la palomita si ya habías anotado la compra de los insumos.</p>'+
+    '<button class="btn pri wide" type="button" id="tOk">Guardar</button>',
+    el=>{
+      el.querySelector("#tN").oninput=e=>{el.querySelector("#tGv").textContent=money(ct*Math.max(1,Math.round(numIn(e.target.value))))};
+      el.querySelector("#tOk").onclick=()=>{
+        const n=Math.max(1,Math.round(numIn(el.querySelector("#tN").value)));
+        p.stock=(+p.stock||0)+n*r.rinde;
+        if(el.querySelector("#tG").checked&&ct>0){const f=today();dia(f).gastos.push({id:uid(),h:hhmm(new Date()),con:"Insumos "+r.nombre+(n>1?" ×"+n:""),cat:"Insumos",m:ct*n});saveDia(f)}
+        saveProductos();close();render();toast("Ahora tienes "+p.stock+" "+p.nombre);
+      };
+    });
+}
+
+/* ---- Cuentas ---- */
+function vCuentas(){
+  if(!S.loaded.d||!S.loaded.c)return loading();
+  const mes=S.otroMes?S.otroMes.mes:monthKey(today());
+  const dias=S.otroMes?S.otroMes.dias:Object.values(S.dias).filter(d=>monthKey(d.fecha)===mes);
+  const r=resumen(dias,mes);
+  const hd=S.dias[today()],rh=resumen(hd&&!S.otroMes?[hd]:[],"x");
+  const [y,m]=mes.split("-");
+  const deben=S.clientes.reduce((a,c)=>a+Math.max(saldo(c),0),0);
+  const surtir=porSurtir().reduce((a,p)=>a+sugerido(p)*(+p.costo||0),0);
+  let h='<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center"><button class="btn sm ghost" type="button" data-act="mes" data-v="-1" aria-label="Mes anterior">‹</button><h2 style="text-transform:capitalize;text-align:center">'+MESES[+m-1]+' '+y+'</h2><button class="btn sm ghost" type="button" data-act="mes" data-v="1" aria-label="Mes siguiente"'+(S.otroMes?'':' disabled')+'>›</button></div>';
+  if(S.otroMes&&S.otroMes.cargando)return h+loading();
+  h+='<div class="hero"><span class="lbl">Ganancia del mes</span><span class="big num">'+money(r.ganancia)+'</span><span style="opacity:.85" class="num">Vendí '+money(r.ventas)+' − lo que me costó la mercancía '+money(r.costo)+' − gastos '+money(r.gastosOp)+'</span></div>';
+  if(!S.otroMes)h+='<div class="stats"><div class="stat"><div class="lbl">Hoy vendí</div><div class="v num">'+money(rh.ventas)+'</div></div><div class="stat"><div class="lbl">Hoy gané</div><div class="v num">'+money(rh.ventas-rh.costo)+'</div></div><div class="stat"><div class="lbl">Me deben</div><div class="v num" style="color:var(--accent)">'+money(deben)+'</div></div><div class="stat"><div class="lbl">Para surtir</div><div class="v num" style="color:var(--warn)">'+money(surtir)+'</div></div></div>';
+  // money in/out
+  h+='<div class="card stack"><h3>Dinero en la caja este mes</h3>'+
+    '<div class="item"><div class="main"><div class="t">Entró</div><div class="sub num">Ventas en efectivo '+money(r.efectivo)+' + abonos de fiado '+money(r.abonos)+'</div></div><span class="amt num" style="color:var(--good)">+'+money(r.entro)+'</span></div>'+
+    '<div class="item"><div class="main"><div class="t">Salió</div><div class="sub num">Compras '+money(r.compras)+' + gastos '+money(r.gastosOp)+' + préstamos '+money(r.prestamos)+'</div></div><span class="amt num" style="color:var(--bad)">−'+money(r.salio)+'</span></div>'+
+    '<div class="row between"><b>Quedó</b><span class="amt num">'+money(r.entro-r.salio)+'</span></div>'+
+    (r.fiado?'<div class="muted" style="font-size:14px">Además vendiste <b class="num">'+money(r.fiado)+'</b> fiado que todavía no entra a la caja.</div>':'')+'</div>';
+  // by place
+  const lt=r.lugar.Tienda||0,lsec=r.lugar.Secundaria||0,tot=lt+lsec;
+  h+='<div class="card stack"><h3>¿Dónde vendí más?</h3>'+(tot?'<div class="bar"><span style="width:'+(lt/tot*100)+'%;background:var(--accent)"></span><span style="flex:1;background:var(--good)"></span></div><div class="row between num"><span><span class="pill acc">Tienda</span> '+money(lt)+'</span><span><span class="pill good">Secundaria</span> '+money(lsec)+'</span></div>':'<div class="muted">Sin ventas este mes.</div>')+'</div>';
+  // top
+  const top=Object.entries(r.top).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(top.length){const mx=top[0][1];h+='<div class="card stack"><h3>Lo que más se vende</h3>'+top.map(([n,c])=>'<div class="stack" style="gap:4px"><div class="row between"><span>'+esc(n)+'</span><b class="num">'+c+' pzas</b></div><div class="bar"><span style="width:'+(c/mx*100)+'%;background:var(--accent)"></span></div></div>').join("")+'</div>'}
+  // gastos
+  h+='<div class="card stack"><div class="row between"><h3>Gastos</h3>'+(S.otroMes?'':'<button class="btn sm pri" type="button" data-act="nuevoGasto">+ Anotar gasto</button>')+'</div>';
+  const gs=r.gastos.sort((a,b)=>(b.f+b.h).localeCompare(a.f+a.h));
+  if(gs.length){
+    const porCat={};gs.forEach(g=>porCat[g.cat]=(porCat[g.cat]||0)+g.m);
+    h+='<div class="chips">'+Object.entries(porCat).map(([c,v])=>'<span class="chip num" style="cursor:default">'+esc(c)+' '+money(v)+'</span>').join("")+'</div>';
+    h+='<div class="list">'+gs.slice(0,40).map(g=>'<div class="item"><div class="main"><div class="t">'+esc(g.con)+'</div><div class="sub">'+fechaLarga(g.f)+' · '+esc(g.cat)+'</div></div><span class="amt num">'+money(g.m)+'</span>'+(S.otroMes?'':'<button class="x" type="button" data-act="delGasto" data-f="'+g.f+'" data-id="'+g.id+'" aria-label="Borrar gasto">×</button>')+'</div>').join("")+'</div>';
+  } else h+='<div class="muted">Aún no hay gastos este mes. Anota la luz, el gas, el pasaje al mercado…</div>';
+  h+='</div>';
+  if(!S.otroMes)h+='<div class="card row between"><div class="main" style="min-width:0;flex:1"><h3>Respaldo</h3><div class="muted" style="font-size:14px">'+(S.respaldo?'Último: '+fechaLarga(S.respaldo):'Aún no hay respaldo')+'</div></div><button class="btn sm pri" type="button" data-act="respaldo">Respaldar o recuperar</button></div>';
+  return h;
+}
+function nuevoGasto(){
+  sheet("Anotar gasto",
+    '<label class="f">¿En qué gastaste?<input id="gC" placeholder="Ej. Recibo de luz"></label>'+
+    '<label class="f">Cantidad<input id="gM" type="number" inputmode="decimal" placeholder="$"></label>'+
+    '<div class="chips" id="gCats" style="flex-wrap:wrap">'+GASTO_CATS.map((c,i)=>'<button class="chip" type="button" data-c="'+c+'" aria-pressed="'+(c==="Otro")+'">'+c+'</button>').join("")+'</div>'+
+    '<p class="muted" style="margin:0;font-size:14px">Mercancía e Insumos son compras para vender; no cuentan contra tu ganancia hasta que vendes. Luz, gas y pasajes sí.</p>'+
+    '<button class="btn pri wide" type="button" id="gOk">Guardar gasto</button>',
+    el=>{
+      let cat="Otro";
+      el.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{cat=b.dataset.c;el.querySelectorAll("[data-c]").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+      el.querySelector("#gOk").onclick=()=>{
+        const con=el.querySelector("#gC").value.trim()||cat,m=numIn(el.querySelector("#gM").value);
+        if(m<=0){toast("Escribe la cantidad");return}
+        const f=today();dia(f).gastos.push({id:uid(),h:hhmm(new Date()),con,cat,m});saveDia(f);close();render();toast("Gasto anotado");
+      };
+    });
+}
+function cambiarMes(delta){
+  const base=S.otroMes?S.otroMes.mes:monthKey(today());
+  let [y,m]=base.split("-").map(Number);m+=delta;if(m<1){m=12;y--}if(m>12){m=1;y++}
+  const mes=y+"-"+pad(m);
+  if(mes>=monthKey(today())){S.otroMes=null;render();return}
+  S.otroMes={mes,dias:Object.values(S.dias).filter(d=>monthKey(d.fecha)===mes)};render();
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click",e=>{
+  const tb=e.target.closest("#tabs button");if(tb){S.tab=tb.dataset.tab;ls.set("tab",S.tab);S.otroMes=null;window.scrollTo(0,0);render();window.scrollTo(0,0);return}
+  if(e.target.closest("#cartBtn")){abrirCobro();return}
+  const b=e.target.closest("#app [data-act]");if(!b)return;
+  const a=b.dataset.act,v=b.dataset.v,id=b.dataset.id;
+  if(a==="lugar"){S.lugar=v;ls.set("lugar",v);render()}
+  else if(a==="cat"){S.cat=v;render()}
+  else if(a==="add"){S.cart[id]=(S.cart[id]||0)+1;render()}
+  else if(a==="cancelVenta"){if(armed(b,"¿Seguro?"))cancelVenta(b.dataset.t)}
+  else if(a==="ejemploOk"){S.ejemplo=false;saveProductos();render()}
+  else if(a==="addCli"){const i=$("#nuevoCli"),n=i.value.trim();if(!n){toast("Escribe el nombre");return}const c={id:uid(),nombre:n,movs:[]};S.clientes.push(c);saveClientes();render();verCli(c.id)}
+  else if(a==="verCli")verCli(id);
+  else if(a==="compre")compre(id);
+  else if(a==="nuevoProd")editProd(null);
+  else if(a==="editProd")editProd(id);
+  else if(a==="tab"){S.tab=v;render();window.scrollTo(0,0)}
+  else if(a==="editRec")editRec(id||null);
+  else if(a==="tanda")tanda(id);
+  else if(a==="nuevoGasto")nuevoGasto();
+  else if(a==="delGasto"){if(!armed(b,"✓"))return;const d=dia(b.dataset.f);d.gastos=d.gastos.filter(g=>g.id!==id);saveDia(b.dataset.f);render()}
+  else if(a==="mes")cambiarMes(+v);
+  else if(a==="respaldo")abrirRespaldo();
+});
+document.addEventListener("input",e=>{if(e.target.id==="q"){S.q=e.target.value;render()}});
+
+boot();
+if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(()=>{});
+})();
+</script>
+
+</body>
+</html>

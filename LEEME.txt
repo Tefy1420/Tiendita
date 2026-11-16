@@ -1,0 +1,19 @@
+MI TIENDITA - cómo instalarla
+
+1) Sube TODOS estos archivos (sin carpetas) a un sitio gratis con https,
+   por ejemplo GitHub Pages:
+   - Crea una cuenta en github.com
+   - "New repository" > nombre: mi-tiendita > Public > Create
+   - "uploading an existing file" > arrastra los 6 archivos > Commit
+   - Settings > Pages > Branch: main, carpeta / (root) > Save
+   - En 1-2 minutos queda en: https://TU-USUARIO.github.io/mi-tiendita/
+
+2) En el celular de ella abre ese enlace:
+   - Android (Chrome): menú ⋮ > "Instalar app" o "Agregar a pantalla principal"
+   - iPhone (Safari): botón Compartir > "Agregar a inicio"
+
+3) Ábrela una vez con internet. Después funciona sin internet.
+
+Los datos se guardan SOLO en ese celular. Que haga un respaldo cada semana
+(Cuentas > Respaldo) y se lo mande por WhatsApp o a Google Drive.
+No borres los "datos del sitio" en Chrome/Safari o se pierde la información.
