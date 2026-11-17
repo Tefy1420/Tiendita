@@ -73,7 +73,11 @@ label.f{display:grid;gap:4px;font-size:14px;font-weight:600;color:var(--muted)}
 .chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--sunk);border-radius:12px;padding:4px;gap:4px}
 .seg button{border:0;background:transparent;border-radius:9px;min-height:42px;font-weight:700}
-.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgb(0 0 0 / .12)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:0 1px 3px rgb(0 0 0 / .15)}
+.qrbox{background:#FFFFFF;border-radius:var(--r);padding:12px;display:grid;place-items:center}
+.qrbox img{width:100%;max-width:320px;height:auto;image-rendering:auto}
+.copy{display:flex;gap:8px;align-items:center;justify-content:space-between;background:var(--sunk);border-radius:12px;padding:10px 12px}
+.copy b{font-size:20px;letter-spacing:.04em;overflow-wrap:anywhere}
 /* product tiles */
 .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .tile{position:relative;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:var(--r);padding:12px;min-height:96px;display:grid;align-content:space-between;gap:6px}
@@ -172,7 +176,7 @@ const INVENTARIO_CATS=["Mercancía","Insumos"];
 const S={
   tab:ls.get("tab","vender"), lugar:ls.get("lugar","Tienda"), cat:"Todo", q:"",
   productos:[], ejemplo:false, clientes:[], recetas:[], dias:{},
-  cart:{}, loaded:{p:false,c:false,r:false,d:false}, dbState:"ok", respaldo:null, otroMes:null
+  cart:{}, loaded:{p:false,c:false,r:false,d:false}, dbState:"ok", respaldo:null, cobro:{}, otroMes:null
 };
 
 /* ---------- storage: IndexedDB on this phone ---------- */
@@ -212,6 +216,8 @@ function save(path,data){
 const saveProductos=()=>save("tienda/productos",{items:S.productos,ejemplo:S.ejemplo});
 const saveClientes=()=>save("tienda/fiado",{clientes:S.clientes});
 const saveRecetas=()=>save("tienda/recetas",{items:S.recetas});
+const saveCobro=()=>save("tienda/cobro",S.cobro);
+const tieneCobro=()=>!!(S.cobro.qr||S.cobro.cel||S.cobro.clabe);
 function dia(f){if(!S.dias[f])S.dias[f]={fecha:f,ventas:[],gastos:[]};return S.dias[f]}
 const saveDia=f=>save("dias/"+f,S.dias[f]);
 function cargar(all){
@@ -221,6 +227,7 @@ function cargar(all){
   S.recetas=r?r.items||[]:[];
   S.dias={};Object.keys(all).forEach(k=>{if(k.startsWith("dias/")){const v=all[k];S.dias[v.fecha]={fecha:v.fecha,ventas:v.ventas||[],gastos:v.gastos||[]}}});
   S.respaldo=all["meta/respaldo"]||null;
+  S.cobro=all["tienda/cobro"]||{};
   S.loaded={p:true,c:true,r:true,d:true};
 }
 async function boot(){
@@ -297,14 +304,14 @@ const porHacer=()=>S.productos.filter(p=>p.tipo==="propio"&&(+p.stock||0)<=(+p.m
 const sugerido=p=>Math.max((+p.min||0)*2-(+p.stock||0),1);
 const cats=()=>["Todo",...new Set(S.productos.map(p=>p.cat||"Otros"))];
 function resumen(dias,mes){
-  const r={ventas:0,efectivo:0,fiado:0,costo:0,lugar:{},gastosOp:0,compras:0,gastos:[],top:{},abonos:0,prestamos:0,dias:new Set()};
+  const r={ventas:0,efectivo:0,transfer:0,fiado:0,costo:0,lugar:{},gastosOp:0,compras:0,gastos:[],top:{},abonos:0,prestamos:0,dias:new Set()};
   dias.forEach(d=>{
-    (d.ventas||[]).forEach(v=>{const t=v.c*v.p;r.ventas+=t;r.costo+=v.c*(v.co||0);r[v.pago==="fiado"?"fiado":"efectivo"]+=t;r.lugar[v.l]=(r.lugar[v.l]||0)+t;r.top[v.n]=(r.top[v.n]||0)+v.c;r.dias.add(d.fecha)});
+    (d.ventas||[]).forEach(v=>{const t=v.c*v.p;r.ventas+=t;r.costo+=v.c*(v.co||0);r[v.pago==="fiado"?"fiado":v.pago==="transferencia"?"transfer":"efectivo"]+=t;r.lugar[v.l]=(r.lugar[v.l]||0)+t;r.top[v.n]=(r.top[v.n]||0)+v.c;r.dias.add(d.fecha)});
     (d.gastos||[]).forEach(g=>{r.gastos.push({...g,f:d.fecha});if(INVENTARIO_CATS.includes(g.cat))r.compras+=g.m;else r.gastosOp+=g.m});
   });
   S.clientes.forEach(c=>(c.movs||[]).forEach(m=>{if(monthKey(m.f)===mes){if(m.tipo==="abono")r.abonos+=m.monto;if(m.tipo==="prestamo")r.prestamos+=m.monto}}));
   r.ganancia=r.ventas-r.costo-r.gastosOp;
-  r.entro=r.efectivo+r.abonos; r.salio=r.compras+r.gastosOp+r.prestamos;
+  r.entro=r.efectivo+r.abonos+r.transfer; r.salio=r.compras+r.gastosOp+r.prestamos;
   return r;
 }
 
@@ -354,11 +361,11 @@ function vVender(){
   h+='<div class="chips">'+cs.map(c=>'<button class="chip" type="button" data-act="cat" data-v="'+esc(c)+'" aria-pressed="'+(S.cat===c)+'">'+esc(c)+'</button>').join("")+'</div>';
   if(!S.productos.length)h+='<div class="card empty"><b>Aún no tienes productos</b>Agrégalos en Surtir → Agregar producto.<br><br><button class="btn pri" type="button" data-act="nuevoProd">Agregar mi primer producto</button></div>';
   else if(!list.length)h+='<div class="empty">No hay productos con ese nombre.</div>';
-  else h+='<div class="tiles">'+list.map(p=>{const q=S.cart[p.id]||0,low=(+p.stock||0)<=(+p.min||0);return '<button type="button" class="tile'+(p.tipo==="propio"?" propio":"")+'" data-act="add" data-id="'+p.id+'">'+(q?'<span class="badge">'+q+'</span>':'')+'<span class="n">'+esc(p.nombre)+'</span><span class="p num">'+money(p.precio)+'</span><span class="s num'+(low?" low":"")+'">Quedan '+(+p.stock||0)+(low?' · por acabarse':'')+'</span></button>'}).join("")+'</div>';
+  else h+='<div class="tiles">'+list.map(p=>{const q=S.cart[p.id]||0,low=(+p.stock||0)<=(+p.min||0);return '<button type="button" class="tile'+(p.tipo==="propio"?" propio":"")+'" data-act="add" data-id="'+p.id+'">'+(q?'<span class="badge">'+q+'</span>':'')+'<span class="n">'+esc(p.nombre)+'</span><span class="p num">'+money(p.precio)+'</span><span class="s num'+(low?" low":"")+'">'+((+p.stock||0)<=0?'Se acabó':'Quedan '+(+p.stock||0)+(low?' · por acabarse':''))+'</span></button>'}).join("")+'</div>';
   const hd=S.dias[today()];
   if(hd&&hd.ventas.length){
     const grupos={};hd.ventas.forEach(v=>{(grupos[v.t||v.id]=grupos[v.t||v.id]||[]).push(v)});
-    h+='<div class="card"><div class="row between"><h3>Ventas de hoy</h3><span class="muted num">'+Object.keys(grupos).length+' ventas</span></div><div class="list">'+Object.entries(grupos).reverse().slice(0,30).map(([t,vs])=>{const tot=vs.reduce((a,v)=>a+v.c*v.p,0);return '<div class="item"><div class="main"><div class="t">'+esc(vs.map(v=>v.c+" "+v.n).join(", "))+'</div><div class="sub">'+esc(vs[0].h)+' · '+esc(vs[0].l)+(vs[0].pago==="fiado"?' · <span class="pill acc">Fiado a '+esc(vs[0].cliN||"")+'</span>':'')+'</div></div><div style="display:grid;justify-items:end;gap:4px"><span class="amt num">'+money(tot)+'</span><button class="btn sm ghost" type="button" data-act="cancelVenta" data-t="'+esc(t)+'">Cancelar</button></div></div>'}).join("")+'</div></div>';
+    h+='<div class="card"><div class="row between"><h3>Ventas de hoy</h3><span class="muted num">'+Object.keys(grupos).length+' ventas</span></div><div class="list">'+Object.entries(grupos).reverse().slice(0,30).map(([t,vs])=>{const tot=vs.reduce((a,v)=>a+v.c*v.p,0);return '<div class="item"><div class="main"><div class="t">'+esc(vs.map(v=>v.c+" "+v.n).join(", "))+'</div><div class="sub">'+esc(vs[0].h)+' · '+esc(vs[0].l)+(vs[0].pago==="fiado"?' · <span class="pill acc">Fiado a '+esc(vs[0].cliN||"")+'</span>':vs[0].pago==="transferencia"?' · <span class="pill good">Transferencia</span>':'')+'</div></div><div style="display:grid;justify-items:end;gap:4px"><span class="amt num">'+money(tot)+'</span><button class="btn sm ghost" type="button" data-act="cancelVenta" data-t="'+esc(t)+'">Cancelar</button></div></div>'}).join("")+'</div></div>';
   }
   return h;
 }
@@ -380,6 +387,7 @@ function abrirCobro(){
       '<div class="row between"><span class="lbl">Total · '+esc(S.lugar)+'</span><span class="big num">'+money(t)+'</span></div>'+
       '<label class="f">¿Con cuánto paga? (opcional)<input id="pagaCon" type="number" inputmode="decimal" placeholder="Ej. 100"></label><div id="cambio" class="muted"></div>'+
       '<button class="btn good wide" type="button" id="cobEf">Cobrar en efectivo</button>'+
+      '<button class="btn pri wide" type="button" id="cobTr">Cobrar por transferencia (QR / DiMo)</button>'+
       '<details><summary class="btn ghost wide" style="list-style:none;display:flex;align-items:center;justify-content:center">Se lo fío a un vecino</summary><div class="stack" style="margin-top:10px">'+
       (S.clientes.length?'<select id="cliSel"><option value="">Elige a quién…</option>'+S.clientes.map(c=>'<option value="'+c.id+'">'+esc(c.nombre)+' (debe '+money(saldo(c))+')</option>').join("")+'</select>':'')+
       '<input id="cliNuevo" placeholder="O escribe un nombre nuevo">'+
@@ -388,6 +396,7 @@ function abrirCobro(){
         el.querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>{S.cart[b.dataset.id]=Math.max(0,(S.cart[b.dataset.id]||0)+(+b.dataset.q));draw()});
         const pc=el.querySelector("#pagaCon");pc.oninput=()=>{const v=numIn(pc.value);el.querySelector("#cambio").innerHTML=v?(v>=t?'Cambio: <b class="num">'+money(v-t)+'</b>':'Faltan <b class="num">'+money(t-v)+'</b>'):""};
         el.querySelector("#cobEf").onclick=()=>cobrar("efectivo");
+        el.querySelector("#cobTr").onclick=()=>cobroTransfer(t);
         el.querySelector("#cobFi").onclick=()=>{
           const sel=el.querySelector("#cliSel"),nu=el.querySelector("#cliNuevo").value.trim();
           let c=sel&&sel.value?S.clientes.find(x=>x.id===sel.value):null;
@@ -408,7 +417,7 @@ function cobrar(pago,cli){
     p.stock=(+p.stock||0)-c;});
   if(cli){cli.movs.push({id:t,f,tipo:"fiado",monto:total,nota:desc.join(", ")});saveClientes()}
   S.cart={};close();saveDia(f);saveProductos();render();
-  toast(pago==="fiado"?"Anotado: "+cli.nombre+" debe "+money(saldo(cli)):"Venta guardada: "+money(total));
+  toast(pago==="fiado"?"Anotado: "+cli.nombre+" debe "+money(saldo(cli)):pago==="transferencia"?"Transferencia guardada: "+money(total):"Venta guardada: "+money(total));
 }
 function cancelVenta(t){
   const f=today(),d=dia(f),vs=d.ventas.filter(v=>(v.t||v.id)===t);
@@ -584,6 +593,103 @@ function tanda(id){
     });
 }
 
+
+/* ---- Cobro por transferencia (CoDi / DiMo) ---- */
+function datosCobroHTML(){
+  const c=S.cobro;
+  return (c.qr?'<div class="qrbox"><img src="'+c.qr+'" alt="Mi código QR para cobrar"></div>':'')+
+    (c.cel?'<div class="copy"><div><div class="lbl">DiMo · número celular</div><b class="num">'+esc(c.cel)+'</b></div><button class="btn sm" type="button" data-copy="'+esc(c.cel)+'">Copiar</button></div>':'')+
+    (c.clabe?'<div class="copy"><div style="min-width:0"><div class="lbl">CLABE</div><b class="num" style="font-size:16px">'+esc(c.clabe)+'</b></div><button class="btn sm" type="button" data-copy="'+esc(c.clabe)+'">Copiar</button></div>':'')+
+    ((c.banco||c.titular)?'<div class="muted" style="text-align:center">'+esc([c.banco,c.titular].filter(Boolean).join(" · "))+'</div>':'');
+}
+function conectarCopiar(el){
+  el.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{try{await navigator.clipboard.writeText(b.dataset.copy);toast("Copiado")}catch(e){toast(b.dataset.copy)}});
+}
+function cobroTransfer(total){
+  if(!tieneCobro()){datosCobro(()=>cobroTransfer(total));return}
+  sheet("Cobrar por transferencia",
+    '<div class="row between"><span class="lbl">Total a pagar</span><span class="big num">'+money(total)+'</span></div>'+
+    datosCobroHTML()+
+    '<p class="muted" style="margin:0;font-size:14px">Que el cliente escanee el QR o transfiera a tu número con la app de su banco. <b>Revisa en tu banco que sí llegó</b> antes de entregar.</p>'+
+    '<button class="btn good wide" type="button" id="trOk">Ya me llegó, guardar venta</button>'+
+    '<button class="btn ghost wide" type="button" id="trBack">Regresar</button>',
+    el=>{
+      conectarCopiar(el);
+      el.querySelector("#trOk").onclick=()=>cobrar("transferencia");
+      el.querySelector("#trBack").onclick=()=>abrirCobro();
+    });
+}
+function achicarImagen(file){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file),img=new Image();
+    img.onload=()=>{const max=900,k=Math.min(1,max/Math.max(img.width,img.height)),cv=document.createElement("canvas");
+      cv.width=Math.round(img.width*k);cv.height=Math.round(img.height*k);const ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);ctx.drawImage(img,0,0,cv.width,cv.height);
+      URL.revokeObjectURL(url);res(cv.toDataURL("image/png"))};
+    img.onerror=()=>{URL.revokeObjectURL(url);rej()};
+    img.src=url;
+  });
+}
+function datosCobro(despues){
+  const c=S.cobro;let qr=c.qr||"";
+  sheet("Mis datos de cobro",
+    '<p class="muted" style="margin:0;font-size:14px">Estos datos se los enseñas al cliente para que te pague por transferencia. <b>Nunca pongas tu número de tarjeta, NIP ni el código de atrás.</b></p>'+
+    '<div class="lbl">Código QR de CoDi</div>'+
+    '<div id="qrPrev">'+(qr?'<div class="qrbox"><img src="'+qr+'" alt="Mi QR"></div>':'<div class="muted" style="font-size:14px">Genera tu QR en la app de tu banco (sección CoDi o "Cobrar con QR"), toma captura de pantalla y súbela aquí.</div>')+'</div>'+
+    '<div class="row"><label class="btn ghost" style="flex:1;display:flex;align-items:center;justify-content:center">'+(qr?'Cambiar foto del QR':'Subir foto del QR')+'<input id="qrFile" type="file" accept="image/*" hidden></label>'+(qr?'<button class="btn danger" type="button" id="qrDel">Quitar</button>':'')+'</div>'+
+    '<label class="f">Número celular para DiMo<input id="cCel" type="tel" inputmode="tel" value="'+esc(c.cel||"")+'" placeholder="10 dígitos"></label>'+
+    '<label class="f">CLABE (opcional, 18 dígitos)<input id="cClabe" inputmode="numeric" value="'+esc(c.clabe||"")+'" placeholder="Si tu banco no tiene DiMo"></label>'+
+    '<div class="grid2"><label class="f">Banco<input id="cBanco" value="'+esc(c.banco||"")+'" placeholder="Ej. BBVA"></label><label class="f">A nombre de<input id="cTit" value="'+esc(c.titular||"")+'" placeholder="Tu nombre"></label></div>'+
+    '<button class="btn pri wide" type="button" id="cOk">Guardar</button>',
+    el=>{
+      el.querySelector("#qrFile").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{qr=await achicarImagen(f);el.querySelector("#qrPrev").innerHTML='<div class="qrbox"><img src="'+qr+'" alt="Mi QR"></div>'}catch(_){toast("No se pudo abrir esa imagen")}};
+      const d=el.querySelector("#qrDel");if(d)d.onclick=()=>{qr="";el.querySelector("#qrPrev").innerHTML='<div class="muted">QR quitado. Toca Guardar.</div>'};
+      el.querySelector("#cOk").onclick=()=>{
+        const cel=el.querySelector("#cCel").value.replace(/[^\d]/g,""),clabe=el.querySelector("#cClabe").value.replace(/[^\d]/g,"");
+        if(cel&&cel.length!==10){toast("El celular debe tener 10 dígitos");return}
+        if(clabe&&clabe.length!==18){toast("La CLABE debe tener 18 dígitos");return}
+        S.cobro={qr,cel,clabe,banco:el.querySelector("#cBanco").value.trim(),titular:el.querySelector("#cTit").value.trim()};
+        saveCobro();close();render();toast("Datos de cobro guardados");
+        if(despues&&tieneCobro())despues();
+      };
+    });
+}
+function verMisDatos(){
+  if(!tieneCobro()){datosCobro();return}
+  sheet("Págame aquí",datosCobroHTML()+'<button class="btn ghost wide" type="button" id="edit">Cambiar mis datos</button>',el=>{conectarCopiar(el);el.querySelector("#edit").onclick=()=>datosCobro()});
+}
+
+/* ---- Resumen para WhatsApp ---- */
+function textoResumen(){
+  const mes=S.otroMes?S.otroMes.mes:monthKey(today());
+  const dias=S.otroMes?S.otroMes.dias:Object.values(S.dias).filter(d=>monthKey(d.fecha)===mes);
+  const r=resumen(dias,mes),[y,m]=mes.split("-");
+  const deudores=S.clientes.map(c=>[c.nombre,saldo(c)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);
+  const deben=deudores.reduce((a,x)=>a+x[1],0);
+  const surtir=porSurtir();
+  const top=Object.entries(r.top).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const L=[];
+  L.push("*Mi Tiendita – "+MESES[+m-1][0].toUpperCase()+MESES[+m-1].slice(1)+" "+y+"*");
+  if(!S.otroMes)L.push("(al "+fechaLarga(today())+")");
+  L.push("");
+  L.push("Vendí: "+money(r.ventas));
+  L.push("  · Tienda "+money(r.lugar.Tienda||0)+" · Secundaria "+money(r.lugar.Secundaria||0));
+  L.push("  · Efectivo "+money(r.efectivo)+" · Transferencia "+money(r.transfer)+" · Fiado "+money(r.fiado));
+  L.push("*Gané: "+money(r.ganancia)+"*");
+  L.push("Gastos (luz, gas, etc.): "+money(r.gastosOp));
+  L.push("Compré mercancía e insumos: "+money(r.compras));
+  L.push("");
+  L.push("Me deben: "+money(deben)+(deudores.length?"":" (nadie)"));
+  deudores.slice(0,10).forEach(([n,v])=>L.push("  · "+n+" "+money(v)));
+  if(top.length){L.push("");L.push("Lo que más vendí: "+top.map(([n,c])=>n+" ("+c+")").join(", "))}
+  if(!S.otroMes){L.push("");L.push("Para surtir necesito: "+money(surtir.reduce((a,p)=>a+sugerido(p)*(+p.costo||0),0))+(surtir.length?" ("+surtir.map(p=>p.nombre).slice(0,6).join(", ")+")":""))}
+  return L.join("\n");
+}
+async function mandarResumen(){
+  const txt=textoResumen();
+  try{if(navigator.share){await navigator.share({text:txt});return}}catch(e){if(e&&e.name==="AbortError")return}
+  window.location.href="https://wa.me/?text="+encodeURIComponent(txt);
+}
+
 /* ---- Cuentas ---- */
 function vCuentas(){
   if(!S.loaded.d||!S.loaded.c)return loading();
@@ -596,13 +702,15 @@ function vCuentas(){
   const surtir=porSurtir().reduce((a,p)=>a+sugerido(p)*(+p.costo||0),0);
   let h='<div style="display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center"><button class="btn sm ghost" type="button" data-act="mes" data-v="-1" aria-label="Mes anterior">‹</button><h2 style="text-transform:capitalize;text-align:center">'+MESES[+m-1]+' '+y+'</h2><button class="btn sm ghost" type="button" data-act="mes" data-v="1" aria-label="Mes siguiente"'+(S.otroMes?'':' disabled')+'>›</button></div>';
   if(S.otroMes&&S.otroMes.cargando)return h+loading();
+  h+='<button class="btn good wide" type="button" data-act="resumenWA">Mandar resumen por WhatsApp</button>';
   h+='<div class="hero"><span class="lbl">Ganancia del mes</span><span class="big num">'+money(r.ganancia)+'</span><span style="opacity:.85" class="num">Vendí '+money(r.ventas)+' − lo que me costó la mercancía '+money(r.costo)+' − gastos '+money(r.gastosOp)+'</span></div>';
   if(!S.otroMes)h+='<div class="stats"><div class="stat"><div class="lbl">Hoy vendí</div><div class="v num">'+money(rh.ventas)+'</div></div><div class="stat"><div class="lbl">Hoy gané</div><div class="v num">'+money(rh.ventas-rh.costo)+'</div></div><div class="stat"><div class="lbl">Me deben</div><div class="v num" style="color:var(--accent)">'+money(deben)+'</div></div><div class="stat"><div class="lbl">Para surtir</div><div class="v num" style="color:var(--warn)">'+money(surtir)+'</div></div></div>';
   // money in/out
-  h+='<div class="card stack"><h3>Dinero en la caja este mes</h3>'+
-    '<div class="item"><div class="main"><div class="t">Entró</div><div class="sub num">Ventas en efectivo '+money(r.efectivo)+' + abonos de fiado '+money(r.abonos)+'</div></div><span class="amt num" style="color:var(--good)">+'+money(r.entro)+'</span></div>'+
+  h+='<div class="card stack"><h3>Dinero que entró y salió este mes</h3>'+
+    '<div class="item"><div class="main"><div class="t">Entró</div><div class="sub num">Efectivo '+money(r.efectivo)+' + transferencias '+money(r.transfer)+' + abonos de fiado '+money(r.abonos)+'</div></div><span class="amt num" style="color:var(--good)">+'+money(r.entro)+'</span></div>'+
     '<div class="item"><div class="main"><div class="t">Salió</div><div class="sub num">Compras '+money(r.compras)+' + gastos '+money(r.gastosOp)+' + préstamos '+money(r.prestamos)+'</div></div><span class="amt num" style="color:var(--bad)">−'+money(r.salio)+'</span></div>'+
     '<div class="row between"><b>Quedó</b><span class="amt num">'+money(r.entro-r.salio)+'</span></div>'+
+    (r.transfer?'<div class="muted" style="font-size:14px"><b class="num">'+money(r.transfer)+'</b> de eso está en tu banco, no en la caja.</div>':'')+
     (r.fiado?'<div class="muted" style="font-size:14px">Además vendiste <b class="num">'+money(r.fiado)+'</b> fiado que todavía no entra a la caja.</div>':'')+'</div>';
   // by place
   const lt=r.lugar.Tienda||0,lsec=r.lugar.Secundaria||0,tot=lt+lsec;
@@ -619,6 +727,7 @@ function vCuentas(){
     h+='<div class="list">'+gs.slice(0,40).map(g=>'<div class="item"><div class="main"><div class="t">'+esc(g.con)+'</div><div class="sub">'+fechaLarga(g.f)+' · '+esc(g.cat)+'</div></div><span class="amt num">'+money(g.m)+'</span>'+(S.otroMes?'':'<button class="x" type="button" data-act="delGasto" data-f="'+g.f+'" data-id="'+g.id+'" aria-label="Borrar gasto">×</button>')+'</div>').join("")+'</div>';
   } else h+='<div class="muted">Aún no hay gastos este mes. Anota la luz, el gas, el pasaje al mercado…</div>';
   h+='</div>';
+  if(!S.otroMes)h+='<div class="card row between"><div class="main" style="min-width:0;flex:1"><h3>Mis datos de cobro</h3><div class="muted" style="font-size:14px">'+(tieneCobro()?'QR de CoDi y número para DiMo':'Agrega tu QR de CoDi y tu número para DiMo')+'</div></div><button class="btn sm pri" type="button" data-act="datosCobro">'+(tieneCobro()?'Ver o cambiar':'Agregar')+'</button></div>';
   if(!S.otroMes)h+='<div class="card row between"><div class="main" style="min-width:0;flex:1"><h3>Respaldo</h3><div class="muted" style="font-size:14px">'+(S.respaldo?'Último: '+fechaLarga(S.respaldo):'Aún no hay respaldo')+'</div></div><button class="btn sm pri" type="button" data-act="respaldo">Respaldar o recuperar</button></div>';
   return h;
 }
@@ -670,6 +779,8 @@ document.addEventListener("click",e=>{
   else if(a==="delGasto"){if(!armed(b,"✓"))return;const d=dia(b.dataset.f);d.gastos=d.gastos.filter(g=>g.id!==id);saveDia(b.dataset.f);render()}
   else if(a==="mes")cambiarMes(+v);
   else if(a==="respaldo")abrirRespaldo();
+  else if(a==="datosCobro")verMisDatos();
+  else if(a==="resumenWA")mandarResumen();
 });
 document.addEventListener("input",e=>{if(e.target.id==="q"){S.q=e.target.value;render()}});
 
